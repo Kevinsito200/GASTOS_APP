@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#FF9EBB" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>Mis Gastos</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cellipse cx='50' cy='58' rx='38' ry='32' fill='%23FFC4D6'/%3E%3Cellipse cx='27' cy='30' rx='11' ry='13' fill='%23FFC4D6'/%3E%3Cellipse cx='73' cy='30' rx='11' ry='13' fill='%23FFC4D6'/%3E%3C/svg%3E" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@500;600;700&display=swap');
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: linear-gradient(180deg,#FFF6F2 0%,#FFF0F5 100%);
+    font-family: 'Quicksand', sans-serif;
+    color: #5A4356;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #app { max-width: 480px; margin: 0 auto; padding: 24px 16px 60px; position: relative; min-height: 100vh; }
+  h1 { font-family:'Fredoka',sans-serif; font-size:24px; color:#FF6FA0; margin:0; }
+  .sub { margin:4px 0 0; color:#8A7288; font-size:13.5px; }
+  .header { display:flex; align-items:center; gap:16px; margin-bottom:18px; }
+  .avatar-slot { width:82px; height:82px; flex-shrink:0; position:relative; display:flex; align-items:flex-end; justify-content:center; overflow:visible; }
+  .header-text { position:relative; z-index:2; flex:1; }
+  .mascot-wrap { animation: float 3.5s ease-in-out infinite; }
+  @keyframes float { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-6px);} }
+  @keyframes pop { from{opacity:0; transform:scale(.9);} to{opacity:1; transform:scale(1);} }
+  .mascot-boom { position: relative; display: inline-block; }
+  .mascot-boom .mascot-wrap { animation: explode-shake 0.7s ease; }
+  @keyframes explode-shake {
+    0% { transform: scale(1) rotate(0deg); }
+    20% { transform: scale(1.2) rotate(-8deg); }
+    40% { transform: scale(1.3) rotate(8deg); }
+    60% { transform: scale(1.15) rotate(-5deg); }
+    80% { transform: scale(1.05) rotate(3deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+  .particle {
+    position: absolute; font-size: 20px; opacity: 0;
+    animation: particle-out 0.9s ease forwards;
+    animation-delay: 0.15s;
+  }
+  @keyframes particle-out {
+    0% { opacity: 1; transform: translate(0,0) scale(0.6); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.3); }
+  }
+  .banner {
+    background:#FFE8CC; border:2px dashed #FFC46B; border-radius:18px;
+    padding:12px 16px; font-size:13.5px; color:#8A6A3B; margin-bottom:16px; line-height:1.5;
+  }
+  .card {
+    background:#fff; border-radius:22px; padding:16px 18px; margin-bottom:16px;
+    box-shadow:0 6px 20px rgba(255,143,179,0.15);
+  }
+  .card-head-row { display:flex; justify-content:space-between; align-items:center; }
+  .card-title { font-family:'Fredoka',sans-serif; font-size:15.5px; }
+  .form { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+  input, select {
+    border:2px solid #FFDDE9; border-radius:14px; padding:10px 12px;
+    font-size:14px; outline:none; color:#5A4356; font-family:'Quicksand',sans-serif; width:100%;
+  }
+  button {
+    border:none; cursor:pointer; transition: transform .15s ease, box-shadow .15s ease;
+    font-family:'Fredoka',sans-serif;
+  }
+  button:hover { transform: translateY(-2px); }
+  .main-btn {
+    background:#FF9EBB; color:#fff; border-radius:14px; padding:11px 14px; font-size:14px;
+    box-shadow:0 4px 12px rgba(255,111,160,.35); width:100%;
+  }
+  .small-btn { background:#FFE3ED; color:#FF6FA0; border-radius:12px; padding:6px 12px; font-size:12.5px; }
+  .progress-track { background:#FFEAF1; border-radius:10px; height:14px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:10px; transition:width .4s ease; }
+  .small { font-size:12.5px; color:#8A7288; margin-top:6px; }
+  .expense-row {
+    display:flex; align-items:center; gap:10px; padding:10px 4px;
+    border-bottom:1px solid #FFEAF1; animation: pop .25s ease;
+  }
+  .expense-row .emoji { font-size:20px; }
+  .expense-row .info { flex:1; }
+  .expense-row .cat-label { font-weight:600; }
+  .expense-row .date-label { font-size:12px; color:#B396AE; }
+  .expense-row .amt { font-weight:700; }
+  .delete-btn { background:none; color:#DDB6C6; font-size:14px; }
+  .history-row { display:flex; justify-content:space-between; padding:8px 2px; border-bottom:1px solid #FFEAF1; }
+  .donut-wrap { display:flex; flex-direction:column; align-items:center; gap:14px; margin-top:8px; }
+  .donut {
+    width:170px; height:170px; border-radius:50%; position:relative;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .donut::before {
+    content:''; position:absolute; width:100px; height:100px; background:#fff; border-radius:50%;
+  }
+  .donut-total { position:relative; font-family:'Fredoka',sans-serif; font-size:13px; text-align:center; z-index:1; }
+  .legend { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
+  .legend-item { font-size:12px; display:flex; align-items:center; gap:5px; }
+  .dot { width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .toast {
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:#5A4356; color:#fff; padding:10px 18px; border-radius:16px; font-size:13px;
+    box-shadow:0 6px 16px rgba(0,0,0,.2); z-index:10; opacity:0; transition:opacity .3s ease;
+  }
+  .toast.show { opacity:1; }
+  .footer { text-align:center; font-size:11.5px; color:#C7A9BB; margin-top:8px; }
+  .cal-nav { display:flex; align-items:center; justify-content:space-between; margin-top:10px; }
+  .cal-nav-btn {
+    background:#FFE3ED; color:#FF6FA0; border-radius:10px; width:32px; height:32px;
+    font-size:16px; display:flex; align-items:center; justify-content:center;
+  }
+  .cal-month-label { font-family:'Fredoka',sans-serif; font-size:14.5px; }
+  .cal-grid { display:grid; grid-template-columns: repeat(7, 1fr); gap:4px; margin-top:12px; }
+  .cal-weekday { text-align:center; font-size:10.5px; color:#B396AE; font-weight:700; padding-bottom:2px; }
+  .cal-day {
+    aspect-ratio: 1; border-radius:10px; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; font-size:12px; background:#FFF6F9; color:#5A4356; position:relative;
+  }
+  .cal-day.empty { background:transparent; }
+  .cal-day.has-expense { background:#FFE3ED; cursor:pointer; font-weight:700; }
+  .cal-day.selected { background:#FF9EBB; color:#fff; }
+  .cal-day .amt-mini { font-size:8.5px; margin-top:1px; }
+  .cal-day.today-mark::after {
+    content:''; position:absolute; bottom:3px; width:5px; height:5px; border-radius:50%; background:#FF6FA0;
+  }
+  .cal-detail { margin-top:12px; border-top:2px dashed #FFEAF1; padding-top:10px; }
+  .datetime-row { display:flex; gap:8px; }
+  .datetime-row input { flex:1; }
+  .field-label { font-size:11.5px; color:#B396AE; margin-bottom:3px; display:block; }
+  .palette-row { display:flex; gap:12px; margin-top:10px; flex-wrap:wrap; }
+  .swatch {
+    width:38px; height:38px; border-radius:50%; border:3px solid transparent; padding:0;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+  }
+  .swatch.active { border-color:#FF6FA0; box-shadow:0 0 0 2px #fff, 0 0 0 4px #FF6FA0; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const BG_PALETTE = {
+  rosa:    { label:"Rosa",    bg:"linear-gradient(180deg,#FFF6F2 0%,#FFF0F5 100%)", swatch:"#FFD3E1" },
+  lavanda: { label:"Lavanda", bg:"linear-gradient(180deg,#F5F0FF 0%,#EDE4FF 100%)", swatch:"#D8C7FF" },
+  menta:   { label:"Menta",   bg:"linear-gradient(180deg,#F0FFF7 0%,#E3FFF0 100%)", swatch:"#B8F2D6" },
+  durazno: { label:"Durazno", bg:"linear-gradient(180deg,#FFF3E8 0%,#FFE9D6 100%)", swatch:"#FFCDA0" },
+  cielo:   { label:"Cielo",   bg:"linear-gradient(180deg,#EFF8FF 0%,#E3F1FF 100%)", swatch:"#BFE3FF" },
+  limon:   { label:"Limón",   bg:"linear-gradient(180deg,#FFFDEB 0%,#FFF7C2 100%)", swatch:"#FFEE93" },
+};
+const CATS = [
+  { id: "comida", label: "Comida", emoji: "🍙", color: "#FF9EBB" },
+  { id: "transporte", label: "Transporte", emoji: "🚌", color: "#8FE3C0" },
+  { id: "diversion", label: "Diversión", emoji: "🎮", color: "#B9A6FF" },
+  { id: "compras", label: "Compras", emoji: "🛍️", color: "#FFD35C" },
+  { id: "salud", label: "Salud", emoji: "💊", color: "#7FD1E0" },
+  { id: "hogar", label: "Hogar", emoji: "🏠", color: "#FFB48A" },
+  { id: "otros", label: "Otros", emoji: "✨", color: "#D6B8E0" },
+];
+const STORAGE_KEY = "gastos-kawaii-data";
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+// 5 personajes originales (no son Pokémon reales por derechos de autor de Nintendo,
+// pero están inspirados en distintos "tipos": eléctrico, fuego, planta, agua y fantasma)
+const MASCOTS = [
+  { id: "electrico", name: "Chispita", body: "#FFD35C", earTip: "#3A2E17", cheek: "#FF6B6B", belly: "#FFF1C2", tail: "bolt" },
+  { id: "fuego",     name: "Flamita",  body: "#FF9B54", earTip: "#B23A24", cheek: "#FFD97D", belly: "#FFEFD9", tail: "flame" },
+  { id: "planta",    name: "Hojarín",  body: "#8FCB7A", earTip: "#4C8B3B", cheek: "#FFB6C1", belly: "#E9F7DD", tail: "leaf" },
+  { id: "agua",      name: "Burbú",    body: "#7EC8E3", earTip: "#3A7CA5", cheek: "#FFC4D6", belly: "#EAF7FB", tail: "drop" },
+  { id: "fantasma",  name: "Lunita",   body: "#C9AEDD", earTip: "#7E5A9E", cheek: "#F6C9E0", belly: "#F3EAF9", tail: "star" },
+];
+
+function monthKey(d) { const dt = new Date(d); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`; }
+function monthLabel(k) { const [y,m] = k.split("-").map(Number); return `${MESES[m-1]} ${y}`; }
+function daysInMonth(d) { const dt = new Date(d); return new Date(dt.getFullYear(), dt.getMonth()+1, 0).getDate(); }
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : { expenses: [], budget: 0 };
+  } catch { return { expenses: [], budget: 0 }; }
+}
+function saveData(data) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); return true; }
+  catch { return false; }
+}
+
+function todayStr() { const d = new Date(); return d.toISOString().slice(0,10); }
+function nowTimeStr() { const d = new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+
+let state = loadData();
+if (!state.bgColor) state.bgColor = "rosa";
+let ui = { amount:"", category: CATS[0].id, note:"", editingBudget:false, budgetInput:"",
+  calYear: new Date().getFullYear(), calMonth: new Date().getMonth(), selectedDay: null,
+  dateInput: todayStr(), timeInput: nowTimeStr() };
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=> t.classList.remove("show"), 2200);
+}
+
+function selectMascot(id) {
+  state.mascotId = id;
+  saveData(state);
+  render();
+}
+
+function reopenPicker() {
+  state.mascotId = null;
+  render();
+}
+
+function renderPicker() {
+  const html = `
+    <div class="card" style="text-align:center; margin-top:30px;">
+      <h1 style="margin-bottom:2px;">Elige tu compañero</h1>
+      <p class="small" style="margin-bottom:14px;">Cuidará tus gastos contigo cada mes 🌸</p>
+      <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center;">
+        ${MASCOTS.map(m => `
+          <button onclick="selectMascot('${m.id}')" style="background:#FFF6F2; border:2px solid #FFDDE9; border-radius:16px; padding:10px 8px; width:96px; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            ${mascotSVG(m.id, "happy", 0, 58)}
+            <span style="font-size:12px; font-family:'Fredoka',sans-serif;">${m.name}</span>
+          </button>
+        `).join("")}
+      </div>
+    </div>
+  `;
+  document.getElementById("app").innerHTML = html;
+}
+
+function mascotSVG(mascotId, mood, ratio, size) {
+  // ratio: 0 (sin gastos) a 1+ (en el límite o pasado). El cuerpo engorda con el ratio.
+  const theme = MASCOTS.find(m => m.id === mascotId) || MASCOTS[0];
+  const r = Math.max(0, Math.min(ratio, 1.25));
+  const bodyRx = 30 + r * 20;   // 30 -> 55
+  const bodyRy = 26 + r * 16;   // 26 -> 46
+  const cheekR = 5 + r * 3;
+  const bellyOpacity = r > 0.15 ? Math.min(0.9, 0.25 + r * 0.5) : 0;
+
+  const eyes = {
+    happy: `<path d="M35 46 Q40 40 45 46" stroke="#4A3A1A" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+            <path d="M55 46 Q60 40 65 46" stroke="#4A3A1A" stroke-width="3.2" fill="none" stroke-linecap="round"/>`,
+    neutral: `<circle cx="40" cy="46" r="3.2" fill="#4A3A1A"/><circle cx="60" cy="46" r="3.2" fill="#4A3A1A"/>`,
+    worried: `<path d="M35 49 Q40 43 46 47" stroke="#4A3A1A" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+              <path d="M54 47 Q60 43 65 49" stroke="#4A3A1A" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+              <path d="M42 62 Q50 56 58 62" stroke="#4A3A1A" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+  };
+  const mouth = {
+    happy: `<path d="M42 58 Q50 66 58 58" stroke="#4A3A1A" stroke-width="3" fill="none" stroke-linecap="round"/>`,
+    neutral: `<path d="M43 59 Q50 61 57 59" stroke="#4A3A1A" stroke-width="2.6" fill="none" stroke-linecap="round"/>`,
+    worried: `<ellipse cx="50" cy="63" rx="6" ry="4" fill="#4A3A1A" opacity="0.85"/>`,
+  };
+
+  const tails = {
+    bolt:  `<path d="M78 65 Q92 60 90 45 Q86 55 80 58 Z" fill="${theme.body}" stroke="${theme.earTip}" stroke-width="1.5"/>`,
+    flame: `<path d="M76 62 Q92 56 87 40 Q83 52 75 50 Q80 58 74 63 Z" fill="${theme.body}" stroke="${theme.earTip}" stroke-width="1.5"/>`,
+    leaf:  `<path d="M74 55 Q97 48 88 32 Q79 44 72 55 Z" fill="${theme.body}" stroke="${theme.earTip}" stroke-width="1.5"/>`,
+    drop:  `<path d="M80 40 Q92 55 80 66 Q68 55 80 40 Z" fill="${theme.body}" stroke="${theme.earTip}" stroke-width="1.5"/>`,
+    star:  `<path d="M84 28 L89 39 L100 40 L90 47 L93 58 L84 51 L75 58 L78 47 L68 40 L79 39 Z" fill="${theme.body}" stroke="${theme.earTip}" stroke-width="1.2"/>`,
+  };
+
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="overflow:visible;">
+    ${tails[theme.tail] || tails.bolt}
+    <!-- cuerpo -->
+    <ellipse cx="50" cy="60" rx="${bodyRx}" ry="${bodyRy}" fill="${theme.body}"/>
+    <!-- pancita -->
+    <ellipse cx="50" cy="66" rx="${bodyRx*0.55}" ry="${bodyRy*0.5}" fill="${theme.belly}" opacity="${bellyOpacity}"/>
+    <!-- orejas -->
+    <ellipse cx="26" cy="26" rx="9" ry="16" fill="${theme.body}"/>
+    <ellipse cx="74" cy="26" rx="9" ry="16" fill="${theme.body}"/>
+    <ellipse cx="26" cy="20" rx="5" ry="8" fill="${theme.earTip}"/>
+    <ellipse cx="74" cy="20" rx="5" ry="8" fill="${theme.earTip}"/>
+    <!-- mejillas -->
+    <circle cx="26" cy="55" r="${cheekR}" fill="${theme.cheek}"/>
+    <circle cx="74" cy="55" r="${cheekR}" fill="${theme.cheek}"/>
+    ${eyes[mood]}${mouth[mood]}
+  </svg>`;
+}
+
+function tombstoneSVG(size) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="overflow:visible;">
+    <ellipse cx="50" cy="88" rx="34" ry="6" fill="#E7C9D2" opacity="0.6"/>
+    <path d="M28 90 L28 46 Q28 20 50 20 Q72 20 72 46 L72 90 Z" fill="#C9C3CE" stroke="#A79FAE" stroke-width="2"/>
+    <text x="50" y="58" font-family="'Fredoka',sans-serif" font-size="15" fill="#8A7288" text-anchor="middle" font-weight="600">RIP</text>
+    <path d="M50 20 L50 4" stroke="#8A7288" stroke-width="2.5"/>
+    <path d="M50 4 L74 10 L50 16 Z" fill="#FF9EBB" stroke="#FF6FA0" stroke-width="1.2"/>
+    <text x="61" y="12" font-family="'Fredoka',sans-serif" font-size="7" fill="#fff" text-anchor="middle" font-weight="700">RIP</text>
+    <circle cx="20" cy="86" r="4" fill="#FFB6C1"/>
+    <circle cx="82" cy="84" r="4" fill="#B9A6FF"/>
+    <text x="20" y="90" font-size="7" text-anchor="middle">🌸</text>
+    <text x="82" y="88" font-size="7" text-anchor="middle">🌸</text>
+  </svg>`;
+}
+
+function buildCalendar() {
+  const year = ui.calYear, month = ui.calMonth;
+  const first = new Date(year, month, 1);
+  const startWeekday = first.getDay(); // 0 = domingo
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  const now = new Date();
+  const isCurrentMonth = now.getFullYear()===year && now.getMonth()===month;
+
+  const byDay = {};
+  (state.expenses||[]).forEach(e => {
+    const d = new Date(e.date);
+    if (d.getFullYear()===year && d.getMonth()===month) {
+      const day = d.getDate();
+      (byDay[day] = byDay[day]||[]).push(e);
+    }
+  });
+
+  const weekdayLabels = ["D","L","M","M","J","V","S"];
+  let cells = weekdayLabels.map(w => `<div class="cal-weekday">${w}</div>`).join("");
+  for (let i=0; i<startWeekday; i++) cells += `<div class="cal-day empty"></div>`;
+  for (let day=1; day<=totalDays; day++) {
+    const dayExpenses = byDay[day];
+    const hasExpense = !!dayExpenses;
+    const total = hasExpense ? dayExpenses.reduce((s,e)=>s+e.amount,0) : 0;
+    const isToday = isCurrentMonth && now.getDate()===day;
+    const isSelected = ui.selectedDay === day;
+    cells += `<div class="cal-day ${hasExpense?"has-expense":""} ${isSelected?"selected":""} ${isToday?"today-mark":""}"
+      ${hasExpense ? `onclick="selectCalDay(${day})"` : ""}>
+      ${day}${hasExpense ? `<span class="amt-mini">S/${total.toFixed(0)}</span>` : ""}
+    </div>`;
+  }
+
+  let detail = "";
+  if (ui.selectedDay && byDay[ui.selectedDay]) {
+    const list = [...byDay[ui.selectedDay]].sort((a,b)=> new Date(a.date)-new Date(b.date));
+    const dayTotal = list.reduce((s,e)=>s+e.amount,0);
+    detail = `<div class="cal-detail">
+      <p class="small" style="margin-bottom:8px;"><b>${ui.selectedDay} de ${MESES[month]}</b> · total S/ ${dayTotal.toFixed(2)}</p>
+      ${list.map(e=>{
+        const cat = CATS.find(c=>c.id===e.category) || CATS[6];
+        const hora = new Date(e.date).toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"});
+        return `<div class="expense-row">
+          <span class="emoji">${cat.emoji}</span>
+          <div class="info">
+            <div class="cat-label">${cat.label}${e.note?` · ${e.note}`:""}</div>
+            <div class="date-label">${hora}</div>
+          </div>
+          <span class="amt">S/ ${e.amount.toFixed(2)}</span>
+          <button class="delete-btn" onclick="deleteExpense('${e.id}')">✕</button>
+        </div>`;
+      }).join("")}
+    </div>`;
+  }
+
+  return `
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="changeCalMonth(-1)">‹</button>
+      <span class="cal-month-label">${MESES[month]} ${year}</span>
+      <button class="cal-nav-btn" onclick="changeCalMonth(1)">›</button>
+    </div>
+    <div class="cal-grid">${cells}</div>
+    ${detail}
+  `;
+}
+
+function changeCalMonth(delta) {
+  let m = ui.calMonth + delta;
+  let y = ui.calYear;
+  if (m < 0) { m = 11; y -= 1; }
+  if (m > 11) { m = 0; y += 1; }
+  ui.calMonth = m; ui.calYear = y; ui.selectedDay = null;
+  render();
+}
+
+function selectCalDay(day) {
+  ui.selectedDay = ui.selectedDay === day ? null : day;
+  render();
+}
+
+function buildDonut(byCategory, total) {
+  if (byCategory.length === 0) return "";
+  let acc = 0;
+  const stops = byCategory.map(c => {
+    const pct = (c.value/total)*100;
+    const from = acc; acc += pct;
+    return `${c.color} ${from}% ${acc}%`;
+  }).join(", ");
+  const legend = byCategory.map(c => `
+    <span class="legend-item"><span class="dot" style="background:${c.color}"></span>${c.name}</span>
+  `).join("");
+  return `
+    <div class="donut-wrap">
+      <div class="donut" style="background: conic-gradient(${stops});">
+        <div class="donut-total">S/ ${total.toFixed(2)}<br/><span style="font-size:10px;color:#B396AE;">total</span></div>
+      </div>
+      <div class="legend">${legend}</div>
+    </div>
+  `;
+}
+
+function render() {
+  if (!state.mascotId) { renderPicker(); return; }
+  const now = new Date();
+  const currentKey = monthKey(now);
+  const grouped = {};
+  (state.expenses||[]).forEach(e => {
+    const k = monthKey(e.date);
+    (grouped[k] = grouped[k]||[]).push(e);
+  });
+  const currentExpenses = grouped[currentKey] || [];
+  const totalSpent = currentExpenses.reduce((s,e)=>s+e.amount,0);
+  const budget = state.budget || 0;
+  const ratio = budget > 0 ? totalSpent/budget : 0;
+  const mood = ratio < 0.5 ? "happy" : ratio < 0.9 ? "neutral" : "worried";
+
+  const catMap = {};
+  currentExpenses.forEach(e => catMap[e.category] = (catMap[e.category]||0) + e.amount);
+  const byCategory = CATS.filter(c=>catMap[c.id]).map(c=>({ name:`${c.emoji} ${c.label}`, value:catMap[c.id], color:c.color }));
+
+  const today = now.getDate();
+  const totalDays = daysInMonth(now);
+  const isEndOfMonth = today >= totalDays - 2;
+  const prevKey = monthKey(new Date(now.getFullYear(), now.getMonth()-1, 1));
+  const prevTotal = (grouped[prevKey]||[]).reduce((s,e)=>s+e.amount,0);
+  const pastMonths = Object.keys(grouped).filter(k=>k!==currentKey).sort((a,b)=> a<b?1:-1).slice(0,6);
+
+  const progressColor = mood==="worried" ? "#FF8FA3" : mood==="neutral" ? "#FFD35C" : "#8FE3C0";
+  const exploded = ratio >= 1;
+  const mascotScale = exploded ? 1 : (1 + Math.min(ratio, 1.1) * 0.3).toFixed(2);
+
+  let html = `
+    <div class="header">
+      <div class="avatar-slot ${exploded ? "mascot-boom" : ""}">
+        <div style="transform: scale(${mascotScale}); transform-origin: center bottom;">
+          <div class="mascot-wrap">
+            ${exploded ? tombstoneSVG(74) : mascotSVG(state.mascotId, mood, ratio, 74)}
+          </div>
+        </div>
+        ${exploded ? `
+          <span class="particle" style="left:37px; top:30px; --dx:-40px; --dy:-40px;">💥</span>
+          <span class="particle" style="left:37px; top:30px; --dx:40px; --dy:-40px;">✨</span>
+          <span class="particle" style="left:37px; top:30px; --dx:-50px; --dy:10px;">💸</span>
+          <span class="particle" style="left:37px; top:30px; --dx:50px; --dy:10px;">💥</span>
+        ` : ""}
+      </div>
+      <div class="header-text">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <h1>Mis Gastos</h1>
+          <button class="small-btn" onclick="reopenPicker()">Cambiar 🔄</button>
+        </div>
+        <p class="sub">Llevas gastado <b>S/ ${totalSpent.toFixed(2)}</b> este mes</p>
+        ${exploded ? `<p class="small" style="color:#FF6FA0; font-weight:700;">Tu mascota descansó en paz... llegaste al tope 💀🌸</p>` : ""}
+      </div>
+    </div>
+  `;
+
+  if (isEndOfMonth) {
+    html += `<div class="banner">🎉 <b>¡Ya casi es fin de mes!</b> Llevas gastado <b>S/ ${totalSpent.toFixed(2)}</b> de ${monthLabel(currentKey)}.
+      ${prevTotal>0 ? ` El mes pasado gastaste <b>S/ ${prevTotal.toFixed(2)}</b>.` : ""}</div>`;
+  }
+
+  html += `<div class="card">
+    <div class="card-head-row">
+      <span class="card-title">🎯 Presupuesto de ${monthLabel(currentKey)}</span>
+      ${!ui.editingBudget ? `<button class="small-btn" onclick="startEditBudget()">Editar</button>` : ""}
+    </div>
+    ${ui.editingBudget ? `
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <input id="budgetInput" type="number" placeholder="Ej. 1200" value="${ui.budgetInput}" />
+        <button class="main-btn" style="width:auto;" onclick="saveBudget()">Guardar</button>
+      </div>
+    ` : `
+      <div style="margin-top:10px;">
+        <div class="progress-track"><div class="progress-fill" style="width:${Math.min(ratio*100,100)}%; background:${progressColor};"></div></div>
+        <p class="small">S/ ${totalSpent.toFixed(2)} de S/ ${budget>0?budget.toFixed(2):"—"} ${budget===0?"(pon un presupuesto para ver tu progreso)":""}</p>
+      </div>
+    `}
+  </div>`;
+
+  html += `<div class="card">
+    <span class="card-title">💌 Agregar gasto</span>
+    <div class="form">
+      <input id="amountInput" type="number" placeholder="Monto" value="${ui.amount}" />
+      <select id="categoryInput">
+        ${CATS.map(c=>`<option value="${c.id}" ${c.id===ui.category?"selected":""}>${c.emoji} ${c.label}</option>`).join("")}
+      </select>
+      <input id="noteInput" type="text" placeholder="Nota (opcional)" value="${ui.note}" />
+      <div class="datetime-row">
+        <div>
+          <span class="field-label">📅 Día en que gastaste</span>
+          <input id="dateInput" type="date" value="${ui.dateInput}" />
+        </div>
+        <div>
+          <span class="field-label">⏰ Hora</span>
+          <input id="timeInput" type="time" value="${ui.timeInput}" />
+        </div>
+      </div>
+      <button class="main-btn" onclick="addExpense()">Guardar ✨</button>
+      ${ui.lastSavedLabel ? `<p class="small" style="text-align:center; color:#8FCB7A; font-weight:600;">✅ Guardado: ${ui.lastSavedLabel}</p>` : ""}
+    </div>
+  </div>`;
+
+  html += `<div class="card">
+    <span class="card-title">🧾 Gastos de ${monthLabel(currentKey)}</span>
+    ${currentExpenses.length===0 ? `<p class="small">Aún no hay gastos este mes. ¡Empieza a anotar! 🌷</p>` : `
+      <div style="margin-top:8px;">
+        ${[...currentExpenses].sort((a,b)=> new Date(b.date)-new Date(a.date)).map(e=>{
+          const cat = CATS.find(c=>c.id===e.category) || CATS[6];
+          const d = new Date(e.date);
+          const dateLabel = d.toLocaleDateString("es-ES",{day:"2-digit",month:"short"});
+          const timeLabel = d.toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"});
+          return `<div class="expense-row">
+            <span class="emoji">${cat.emoji}</span>
+            <div class="info">
+              <div class="cat-label">${cat.label}${e.note?` · ${e.note}`:""}</div>
+              <div class="date-label">${dateLabel} · ${timeLabel}</div>
+            </div>
+            <span class="amt">S/ ${e.amount.toFixed(2)}</span>
+            <button class="delete-btn" onclick="deleteExpense('${e.id}')">✕</button>
+          </div>`;
+        }).join("")}
+      </div>
+    `}
+  </div>`;
+
+  html += `<div class="card">
+    <span class="card-title">📅 Calendario de gastos</span>
+    ${buildCalendar()}
+  </div>`;
+
+  html += `<div class="card">
+    <span class="card-title">🎨 Fondo de la app</span>
+    <div class="palette-row">
+      ${Object.entries(BG_PALETTE).map(([id,p])=>`
+        <button class="swatch ${state.bgColor===id?"active":""}" style="background:${p.swatch};" onclick="setBg('${id}')" title="${p.label}"></button>
+      `).join("")}
+    </div>
+  </div>`;
+
+  if (byCategory.length>0) {
+    html += `<div class="card">
+      <span class="card-title">🍰 Resumen por categoría</span>
+      ${buildDonut(byCategory, totalSpent)}
+    </div>`;
+  }
+
+  if (pastMonths.length>0) {
+    html += `<div class="card">
+      <span class="card-title">📜 Meses anteriores</span>
+      ${pastMonths.map(k=>{
+        const total = grouped[k].reduce((s,e)=>s+e.amount,0);
+        return `<div class="history-row"><span style="font-weight:600;">${monthLabel(k)}</span><span style="font-weight:700; color:#8A7288;">S/ ${total.toFixed(2)}</span></div>`;
+      }).join("")}
+    </div>`;
+  }
+
+  html += `<p class="footer">Montos en soles (S/) · Tus datos se guardan en este teléfono ☁️🌸</p>`;
+  html += `<div id="toast" class="toast"></div>`;
+
+  document.body.style.background = BG_PALETTE[state.bgColor||"rosa"].bg;
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) themeMeta.setAttribute("content", BG_PALETTE[state.bgColor||"rosa"].swatch);
+
+  document.getElementById("app").innerHTML = html;
+
+  if (ui.editingBudget) {
+    const bi = document.getElementById("budgetInput");
+    bi.addEventListener("input", e => ui.budgetInput = e.target.value);
+    bi.focus();
+  } else {
+    document.getElementById("amountInput").addEventListener("input", e => ui.amount = e.target.value);
+    document.getElementById("categoryInput").addEventListener("change", e => ui.category = e.target.value);
+    document.getElementById("noteInput").addEventListener("input", e => ui.note = e.target.value);
+    document.getElementById("dateInput").addEventListener("input", e => ui.dateInput = e.target.value);
+    document.getElementById("timeInput").addEventListener("input", e => ui.timeInput = e.target.value);
+  }
+}
+
+function setBg(id) {
+  state.bgColor = id;
+  saveData(state);
+  render();
+}
+
+function startEditBudget() {
+  ui.editingBudget = true;
+  ui.budgetInput = state.budget ? String(state.budget) : "";
+  render();
+}
+
+function saveBudget() {
+  const val = parseFloat(ui.budgetInput);
+  state.budget = val > 0 ? val : 0;
+  ui.editingBudget = false;
+  const ok = saveData(state);
+  render();
+  showToast(ok ? "Presupuesto actualizado 🌸" : "No se pudo guardar 😢");
+}
+
+function addExpense() {
+  const val = parseFloat(ui.amount);
+  if (!val || val <= 0) { showToast("Escribe un monto válido 🥺"); return; }
+  const dateStr = ui.dateInput || todayStr();
+  const timeStr = ui.timeInput || nowTimeStr();
+  const combined = new Date(`${dateStr}T${timeStr}`);
+  const finalDate = isNaN(combined.getTime()) ? new Date() : combined;
+  const entry = { id: Date.now()+Math.random().toString(16).slice(2), amount: val, category: ui.category, note: (ui.note||"").trim(), date: finalDate.toISOString() };
+  state.expenses = [...(state.expenses||[]), entry];
+  ui.amount = ""; ui.note = "";
+  ui.lastSavedLabel = finalDate.toLocaleDateString("es-ES",{day:"2-digit",month:"short",year:"numeric"}) +
+    " · " + finalDate.toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"});
+  const ok = saveData(state);
+  render();
+  showToast(ok ? "¡Gasto guardado! 💕" : "No se pudo guardar 😢");
+}
+
+function deleteExpense(id) {
+  state.expenses = (state.expenses||[]).filter(e => e.id !== id);
+  saveData(state);
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
